@@ -73,3 +73,7 @@ if err != nil {
 }
 fmt.Printf("Suggested commit message: %s\n", message)
 ```
+
+## Usage
+I have added the generated binary file to my path and use it anywhere in my machine
+```commit-generator diff```
