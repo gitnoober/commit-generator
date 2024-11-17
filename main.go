@@ -91,8 +91,6 @@ func getSuggestedCommitMessage(diff string) (string, error) {
 }
 
 func main() {
-	fmt.Println("Running git-helper")
-	fmt.Println(os.Args)
 	if len(os.Args) < 2 {
 		panic("Usage: git-helper diff")
 	}
@@ -101,7 +99,6 @@ func main() {
 
 	switch command {
 	case "diff":
-		fmt.Println("Running git diff")
 		diff, err := runGitDiff()
 		if err != nil {
 			fmt.Println("Error running git diff")
