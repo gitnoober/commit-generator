@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 )
 
 type LLMRequest struct {
 	Prompt string `json:"prompt"`
+	Model  string `json:"model"`
 }
 
 type LLMResponse struct {
@@ -26,26 +29,38 @@ func runGitDiff() (string, error) {
 }
 
 func getSuggestedCommitMessage(diff string) (string, error) {
-	llmURL := "http://localhost:11400/completions"
+	llmURL := "http://localhost:11434/api/generate"
+	model := "llama3.2"
 
 	prompt := fmt.Sprintf("Here are the changes from `git diff`:\n%s\nGenerate a concise Git commit message.", diff)
-	requestBody, _ := json.Marshal(LLMRequest{Prompt: prompt})
-	fmt.Println("Request body:")
-	fmt.Println(string(requestBody))
 
-	resp, err := exec.Command("curl", "-XPOST", llmURL, "--data", string(requestBody)).Output()
+	request := LLMRequest{
+		Prompt: prompt,
+		Model:  model,
+	}
+	jsonData, _ := json.Marshal(request)
+	fmt.Println("Request body:")
+	fmt.Println(string(jsonData))
+
+	resp, err := http.Post(llmURL, "application/json", bytes.NewBuffer(jsonData))
 
 	if err != nil {
 		return "", fmt.Errorf("error calling LLM: %s", err)
 	}
+	defer resp.Body.Close()
 
-	var llmResp LLMResponse
-	if err := json.Unmarshal(resp, &llmResp); err != nil {
-		return "", fmt.Errorf("error parsing LLM response: %s", err)
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %w", err)
 	}
 
+	// Parse the JSON response into LLMResponse struct
+	var llmResp LLMResponse
+	if err := json.Unmarshal(body, &llmResp); err != nil {
+		return "", fmt.Errorf("error parsing LLM response: %w", err)
+	}
 	return llmResp.Response, nil
-
 }
 
 func main() {
