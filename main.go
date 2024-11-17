@@ -16,7 +16,10 @@ type LLMRequest struct {
 }
 
 type LLMResponse struct {
-	Response string `json:"response"`
+    Model     string `json:"model"`
+    CreatedAt string `json:"created_at"`
+    Response  string `json:"response"`
+    Done      bool   `json:"done"`
 }
 
 func runGitDiff() (string, error) {
@@ -39,8 +42,8 @@ func getSuggestedCommitMessage(diff string) (string, error) {
 		Model:  model,
 	}
 	jsonData, _ := json.Marshal(request)
-	fmt.Println("Request body:")
-	fmt.Println(string(jsonData))
+	// fmt.Println("Request body:")
+	// fmt.Println(string(jsonData)) // Print the JSON request body
 
 	resp, err := http.Post(llmURL, "application/json", bytes.NewBuffer(jsonData))
 
@@ -54,12 +57,14 @@ func getSuggestedCommitMessage(diff string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error reading response body: %w", err)
 	}
+	fmt.Println(body)
 
-	// Parse the JSON response into LLMResponse struct
+	// Parse the JSON response into the LLMResponse struct
 	var llmResp LLMResponse
 	if err := json.Unmarshal(body, &llmResp); err != nil {
 		return "", fmt.Errorf("error parsing LLM response: %w", err)
 	}
+
 	return llmResp.Response, nil
 }
 
@@ -83,7 +88,8 @@ func main() {
 		fmt.Println(diff)
 		suggestedCommitMessage, err := getSuggestedCommitMessage(diff)
 		if err != nil {
-			panic(err)
+			fmt.Println("Error getting suggested commit message", err)
+			return
 		}
 		fmt.Println(suggestedCommitMessage)
 	}
