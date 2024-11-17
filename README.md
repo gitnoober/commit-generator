@@ -1,6 +1,6 @@
 # Commit Message Generator
 
-A Go client that uses Ollama's local LLM to generate Git commit messages based on diff content.
+A CLI tool that uses Ollama's local LLM to generate Git commit messages based on diff content.
 
 ## Features
 
